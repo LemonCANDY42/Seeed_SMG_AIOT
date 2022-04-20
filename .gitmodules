@@ -1,3 +1,6 @@
 [submodule "submodule"]
 	path = submodule
 	url = https://github.com/OPIXray-author/OPIXray.git
+[submodule "OPIXray"]
+	path = OPIXray
+	url = https://github.com/LemonCANDY42/OPIXray.git
