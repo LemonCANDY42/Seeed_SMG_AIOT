@@ -29,12 +29,68 @@ from functools import partial
 import argparse
 import numpy as np
 import time
+import os
 import sys
 
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
 
+sys.path.append("./OPIXray/DOAM")
+import torch
+from OPIXray.DOAM.layers.functions.detection import Detect
+from OPIXray.DOAM.detection_draw import draw_with_coordinate
+sys.path.append("./OPIXray/DOAM/utils")
+from OPIXray.DOAM.utils.predict_struct import result_struct
+from OPIXray.DOAM.data import OPIXray_CLASSES
+from PIL import Image
+import cv2
+
+def preprocess(img, h, w):
+    """
+    Pre-process an image to meet the size, type and format
+    requirements specified by the parameters.
+    """
+    resized_img = cv2.resize(img,(w, h))
+    #  RGB2BGR
+    resized = np.array(resized_img)
+    resized = resized.transpose(2, 0, 1)[np.newaxis,::].astype(np.float32)
+    print(resized.shape,resized.dtype)
+    return resized
+
+
+def file_paser(FLAGS,h=300,w=300):
+    filenames = []
+    if os.path.isdir(FLAGS.image_filename):
+        filenames = [
+            os.path.join(FLAGS.image_filename, f)
+            for f in os.listdir(FLAGS.image_filename)
+            if os.path.isfile(os.path.join(FLAGS.image_filename, f))
+        ]
+    else:
+        filenames = [
+            FLAGS.image_filename,
+        ]
+
+    filenames.sort()
+
+    image_data = []
+    og_ims = []
+    for filename in filenames:
+        img = cv2.imread(filename)
+        og_ims.append(img)
+        image_data.append(preprocess(img, h, w,))
+    return image_data,og_ims
+
+
+def plot_result(detections,og_im,h=300,w=300,classes=OPIXray_CLASSES):
+    all_boxes = [[[] for _ in range(1)]
+                 for _ in range(len(classes) + 1)]
+    class_correct_scores, class_coordinate_dict = result_struct(detections, h=954, w=1225, all_boxes=all_boxes, OPIXray_CLASSES=OPIXray_CLASSES)
+    print(class_coordinate_dict)
+    draw_with_coordinate(class_correct_scores, class_coordinate_dict,og_im)
+
 if __name__ == '__main__':
+    # python OPIXray_grpc_image_client.py  -u 192.168.8.187:8001 -m opi
     parser = argparse.ArgumentParser()
     parser.add_argument('-v',
                         '--verbose',
@@ -59,6 +115,11 @@ if __name__ == '__main__':
                         required=False,
                         default=None,
                         help='Client timeout in seconds. Default is None.')
+    parser.add_argument('image_filename',
+                        type=str,
+                        nargs='?',
+                        default=None,
+                        help='Input image / Input folder.')
 
     FLAGS = parser.parse_args()
     try:
@@ -82,16 +143,15 @@ if __name__ == '__main__':
     # input0_data = np.arange(start=0, stop=16, dtype=np.int32)
     # input0_data = np.expand_dims(input0_data, axis=0)
 
-    input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
-    # input1_data = np.ones(shape=(1, 16), dtype=np.int32)
-
+    image_data,og_ims = file_paser(FLAGS)
+    # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
+    input0_data = image_data[0]
     # Initialize the data
     inputs[0].set_data_from_numpy(input0_data)
-    # inputs[1].set_data_from_numpy(input1_data)
 
-    outputs.append(grpcclient.InferRequestedOutput('264'))
     outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
-    outputs.append(grpcclient.InferRequestedOutput('406'))
+    outputs.append(grpcclient.InferRequestedOutput('407'))
+    outputs.append(grpcclient.InferRequestedOutput('408'))
 
     # Define the callback function. Note the last two parameters should be
     # result and error. InferenceServerClient would povide the results of an
@@ -134,10 +194,14 @@ if __name__ == '__main__':
         # outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
         # outputs.append(grpcclient.InferRequestedOutput('406'))
 
-        output0_data = user_data[0].as_numpy('264')
-        output1_data = user_data[0].as_numpy('modelOutput')
-        output2_data = user_data[0].as_numpy('406')
-        print(output2_data.shape)
+        output0_data = torch.from_numpy(user_data[0].as_numpy('modelOutput'))
+        output1_data = torch.from_numpy(user_data[0].as_numpy('407'))
+        output2_data = torch.from_numpy(user_data[0].as_numpy('408'))
+        print(output0_data.shape,output1_data.shape,output2_data.shape)
+        # exit(0)
+        detect = Detect(6, 0, 200, 0.01, 0.45)
+        result = detect.forward(output0_data,output1_data,output2_data).data
+        plot_result(result,og_im=og_ims[0])
         # for i in range(16):
         #     print(
         #         str(input0_data[0][i]) + " + " + str(input1_data[0][i]) +
