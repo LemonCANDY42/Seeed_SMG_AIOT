@@ -82,10 +82,10 @@ def file_paser(FLAGS,h=300,w=300):
     return image_data,og_ims
 
 
-def plot_result(detections,og_im,h=300,w=300,classes=OPIXray_CLASSES):
+def plot_result(detections,og_im,h=954,w=1225,classes=OPIXray_CLASSES):
     all_boxes = [[[] for _ in range(1)]
                  for _ in range(len(classes) + 1)]
-    class_correct_scores, class_coordinate_dict = result_struct(detections, h=954, w=1225, all_boxes=all_boxes, OPIXray_CLASSES=OPIXray_CLASSES)
+    class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes, OPIXray_CLASSES=OPIXray_CLASSES)
     print(class_coordinate_dict)
     draw_with_coordinate(class_correct_scores, class_coordinate_dict,og_im)
 
@@ -147,6 +147,7 @@ if __name__ == '__main__':
     # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
     input0_data = image_data[0]
     # Initialize the data
+
     inputs[0].set_data_from_numpy(input0_data)
 
     outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
@@ -173,12 +174,14 @@ if __name__ == '__main__':
                               callback=partial(callback, user_data),
                               outputs=outputs,
                               client_timeout=FLAGS.client_timeout)
-
+    start1 = time.time()
     # Wait until the results are available in user_data
     time_out = 10
     while ((len(user_data) == 0) and time_out > 0):
-        time_out = time_out - 1
-        time.sleep(1)
+        time_out = time_out - .1
+        time.sleep(.1)
+
+
 
     # Display and validate the available results
     print((len(user_data)))
@@ -201,6 +204,8 @@ if __name__ == '__main__':
         # exit(0)
         detect = Detect(6, 0, 200, 0.01, 0.45)
         result = detect.forward(output0_data,output1_data,output2_data).data
+
+        print(time.time() - start1, "s")
         plot_result(result,og_im=og_ims[0])
         # for i in range(16):
         #     print(
