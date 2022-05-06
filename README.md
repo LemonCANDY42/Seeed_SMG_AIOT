@@ -3,6 +3,7 @@
 
 ## Environment
   - pytorch=1.11.0
+  - conda environment:triton_requirements.yaml
 
 ## Quick Start
 
