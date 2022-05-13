@@ -10,46 +10,26 @@ import argparse
 import sys
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
-#from Seeed_SMG_AIOT.OPIXray_grapc_image_client import plot_result
-
-ImageFile.LOAD_TRUNCATED_IMAGES = True
-# 创建handler进行log打印
-logging.basicConfig(level=logging.DEBUG,
-                    filemode='w',
-                    format='%(levelname)s:%(asctime)s:%(message)s',
-                    datefmt='%Y-%d-%m %H:%M:%S')
+from OPIXray_grpc_image_client import *
+from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
 
-def result_Display(Image_dir, Image_type):
-    '''
-    :param Image_dir: image_path
-    :param Image_type
-    '''
-    try:
-        Image_glob = os.path.join(Image_dir, f"*.{Image_type}")
-        Image_name_list = []
-        Image_name_list.extend(glob.glob(Image_glob))
-        for Image_i in Image_name_list:
-            # iamge1 is the original image
-            # image2 is the result image
-            image1 = cv2.imread(Image_i)
-            image2 = plot_result(detections,image1,h=954,w=1225,classes=OPIXray_CLASSES)
-            #result_image = plot_result(result,og_im=og_ims[0])
-            #logging.info(f"Size of the Image:{image.shape}")
+def plot_result_dynamic(detections,og_im,h=954,w=1225,classes=OPIXray_CLASSES):
+    all_boxes = [[[] for _ in range(1)]
+                 for _ in range(len(classes) + 1)]
+    class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes, OPIXray_CLASSES=OPIXray_CLASSES)
+    print(class_coordinate_dict)
+    # draw_with_coordinate(class_correct_scores, class_coordinate_dict,og_im)
 
-            fig, axes = plt.subplots(1, 2)  # figsize设定窗口大小
-            axes[0].imshow(image1)
-            axes[0].set_title("Xray Image")
-            axes[0].axis('off')
-            axes[1].imshow(image2)
-            axes[1].set_title("Result")
-            axes[1].axis('off')
-            plt.pause(2)
-    except BaseException as E:
-        traceback.print_exc()
+    image1,image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict,og_im)
+    fig, axes = plt.subplots(1, 2)
+    axes[0].imshow(image1)
+    axes[0].set_title("Xray Image")
+    axes[0].axis('off')
+    axes[1].imshow(image2)
+    axes[1].set_title("Result")
+    axes[1].axis('off')
 
-if __name__ == '__main__':
-    result = result_Display(r"Dataset", 'jpg')
 
 if __name__ == '__main__':
     # python OPIXray_grpc_image_client.py  -u 192.168.8.187:8001 -m opi
@@ -168,8 +148,18 @@ if __name__ == '__main__':
         result = detect.forward(output0_data,output1_data,output2_data).data
 
         print(time.time() - start1, "s")
-        # plot_result(result,og_im=og_ims[0])
-        result_Display(r"Dataset", 'jpg')
+       # plot_result(result,og_im=og_ims[0])
+        plot_result_dynamic(result,og_im=og_ims[0])
+        # print('hihkjhkjjlkjlkjl')
+        # fig, axes = plt.subplots(1, 2)  # figsize设定窗口大小
+        #     axes[0].imshow(result_img)
+        #     axes[0].set_title("Xray Image")
+        #     axes[0].axis('off')
+        #     axes[1].imshow(result_img)
+        #     axes[1].set_title("Result")
+        #     axes[1].axis('off')
+        #     plt.pause(2)
+        #result_Display(r"Dataset", 'jpg')
         # for i in range(16):
         #     print(
         #         str(input0_data[0][i]) + " + " + str(input1_data[0][i]) +
@@ -184,4 +174,3 @@ if __name__ == '__main__':
         #         print("sync infer error: incorrect difference")
         #         sys.exit(1)
         print("PASS: Async infer")
-
