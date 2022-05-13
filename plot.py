@@ -14,14 +14,15 @@ from OPIXray_grpc_image_client import *
 from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
 
-def plot_result_dynamic(detections,og_im,h=954,w=1225,classes=OPIXray_CLASSES):
+def plot_result_dynamic(detections, og_im, h=954, w=1225, classes=OPIXray_CLASSES):
     all_boxes = [[[] for _ in range(1)]
                  for _ in range(len(classes) + 1)]
-    class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes, OPIXray_CLASSES=OPIXray_CLASSES)
+    class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes,
+                                                                OPIXray_CLASSES=OPIXray_CLASSES)
     print(class_coordinate_dict)
     # draw_with_coordinate(class_correct_scores, class_coordinate_dict,og_im)
 
-    image1,image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict,og_im)
+    image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_im)
     fig, axes = plt.subplots(1, 2)
     axes[0].imshow(image1)
     axes[0].set_title("Xray Image")
@@ -76,7 +77,7 @@ if __name__ == '__main__':
     # Infer
     inputs = []
     outputs = []
-    inputs.append(grpcclient.InferInput('modelInput', [1,3, 300,300], "FP32"))
+    inputs.append(grpcclient.InferInput('modelInput', [1, 3, 300, 300], "FP32"))
     # inputs.append(grpcclient.InferInput('INPUT1', [1, 16], "INT32"))
 
     # Create the data for the two input tensors. Initialize the first
@@ -85,71 +86,75 @@ if __name__ == '__main__':
     # input0_data = np.arange(start=0, stop=16, dtype=np.int32)
     # input0_data = np.expand_dims(input0_data, axis=0)
 
-    image_data,og_ims = file_paser(FLAGS)
-    # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
-    input0_data = image_data[0]
-    # Initialize the data
+    image_data, og_ims = file_paser(FLAGS)
+    for i in range(1, len(image_data)):
 
-    inputs[0].set_data_from_numpy(input0_data)
+        # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
+        inputi_data = image_data[i]
+        # Initialize the data
 
-    outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
-    outputs.append(grpcclient.InferRequestedOutput('407'))
-    outputs.append(grpcclient.InferRequestedOutput('408'))
+        inputs[i].set_data_from_numpy(input0_data)
 
-    # Define the callback function. Note the last two parameters should be
-    # result and error. InferenceServerClient would povide the results of an
-    # inference as grpcclient.InferResult in result. For successful
-    # inference, error will be None, otherwise it will be an object of
-    # tritonclientutils.InferenceServerException holding the error details
-    def callback(user_data, result, error):
-        if error:
-            user_data.append(error)
-        else:
-            user_data.append(result)
-
-    # list to hold the results of inference.
-    user_data = []
-
-    # Inference call
-    triton_client.async_infer(model_name=model_name,
-                              inputs=inputs,
-                              callback=partial(callback, user_data),
-                              outputs=outputs,
-                              client_timeout=FLAGS.client_timeout)
-    start1 = time.time()
-    # Wait until the results are available in user_data
-    time_out = 10
-    while ((len(user_data) == 0) and time_out > 0):
-        time_out = time_out - .1
-        time.sleep(.1)
+        outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
+        outputs.append(grpcclient.InferRequestedOutput('407'))
+        outputs.append(grpcclient.InferRequestedOutput('408'))
 
 
+        # Define the callback function. Note the last two parameters should be
+        # result and error. InferenceServerClient would povide the results of an
+        # inference as grpcclient.InferResult in result. For successful
+        # inference, error will be None, otherwise it will be an object of
+        # tritonclientutils.InferenceServerException holding the error details
+        def callback(user_data, result, error):
+            if error:
+                user_data.append(error)
+            else:
+                user_data.append(result)
 
-    # Display and validate the available results
-    print((len(user_data)))
-    if ((len(user_data) == 1)):
-        # Check for the errors
-        if type(user_data[0]) == InferenceServerException:
-            print(user_data[0])
-            sys.exit(1)
 
-        # Validate the values by matching with already computed expected
-        # values.
-        # outputs.append(grpcclient.InferRequestedOutput('264'))
-        # outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
-        # outputs.append(grpcclient.InferRequestedOutput('406'))
+        # list to hold the results of inference.
+        user_data = []
 
-        output0_data = torch.from_numpy(user_data[0].as_numpy('modelOutput'))
-        output1_data = torch.from_numpy(user_data[0].as_numpy('407'))
-        output2_data = torch.from_numpy(user_data[0].as_numpy('408'))
-        print(output0_data.shape,output1_data.shape,output2_data.shape)
-        # exit(0)
-        detect = Detect(6, 0, 200, 0.01, 0.45)
-        result = detect.forward(output0_data,output1_data,output2_data).data
+        # Inference call
+        triton_client.async_infer(model_name=model_name,
+                                  inputs=inputs,
+                                  callback=partial(callback, user_data),
+                                  outputs=outputs,
+                                  client_timeout=FLAGS.client_timeout)
+        start1 = time.time()
+        # Wait until the results are available in user_data
+        time_out = 10
+        while ((len(user_data) == 0) and time_out > 0):
+            time_out = time_out - .1
+            time.sleep(.1)
 
-        print(time.time() - start1, "s")
-       # plot_result(result,og_im=og_ims[0])
-        plot_result_dynamic(result,og_im=og_ims[0])
+        # Display and validate the available results
+        print((len(user_data)))
+        if ((len(user_data) == 1)):
+            # Check for the errors
+            if type(user_data[0]) == InferenceServerException:
+                print(user_data[0])
+                sys.exit(1)
+
+            # Validate the values by matching with already computed expected
+            # values.
+            # outputs.append(grpcclient.InferRequestedOutput('264'))
+            # outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
+            # outputs.append(grpcclient.InferRequestedOutput('406'))
+
+            output0_data = torch.from_numpy(user_data[i].as_numpy('modelOutput'))
+            output1_data = torch.from_numpy(user_data[i].as_numpy('407'))
+            output2_data = torch.from_numpy(user_data[i].as_numpy('408'))
+            print(output0_data.shape, output1_data.shape, output2_data.shape)
+            # exit(0)
+            detect = Detect(6, 0, 200, 0.01, 0.45)
+            result = detect.forward(output0_data, output1_data, output2_data).data
+
+            print(time.time() - start1, "s")
+            # plot_result(result,og_im=og_ims[0])
+            plot_result_dynamic(result, og_im=og_ims[i])
+            plt.show()
+            plt.pause(5)
         # print('hihkjhkjjlkjlkjl')
         # fig, axes = plt.subplots(1, 2)  # figsize设定窗口大小
         #     axes[0].imshow(result_img)
@@ -159,7 +164,7 @@ if __name__ == '__main__':
         #     axes[1].set_title("Result")
         #     axes[1].axis('off')
         #     plt.pause(2)
-        #result_Display(r"Dataset", 'jpg')
+        # result_Display(r"Dataset", 'jpg')
         # for i in range(16):
         #     print(
         #         str(input0_data[0][i]) + " + " + str(input1_data[0][i]) +
@@ -174,3 +179,4 @@ if __name__ == '__main__':
         #         print("sync infer error: incorrect difference")
         #         sys.exit(1)
         print("PASS: Async infer")
+
