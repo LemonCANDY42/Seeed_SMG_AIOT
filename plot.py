@@ -94,7 +94,7 @@ if __name__ == '__main__':
         inputi_data = image_data[i]
         # Initialize the data
 
-        inputs[i].set_data_from_numpy(input0_data)
+        inputs[i].set_data_from_numpy(inputi_data)
 
         outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
         outputs.append(grpcclient.InferRequestedOutput('407'))
