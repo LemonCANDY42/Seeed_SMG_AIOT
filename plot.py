@@ -30,6 +30,7 @@ def plot_result_dynamic(detections, og_im, h=954, w=1225, classes=OPIXray_CLASSE
     axes[1].imshow(image2)
     axes[1].set_title("Result")
     axes[1].axis('off')
+    plt.show()
 
 
 if __name__ == '__main__':
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     # input0_data = np.expand_dims(input0_data, axis=0)
 
     image_data, og_ims = file_paser(FLAGS)
-    for i in range(1, len(image_data)):
+    for i in range(0, len(image_data)-1):
 
         # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
         inputi_data = image_data[i]
@@ -132,8 +133,8 @@ if __name__ == '__main__':
         print((len(user_data)))
         if ((len(user_data) == 1)):
             # Check for the errors
-            if type(user_data[0]) == InferenceServerException:
-                print(user_data[0])
+            if type(user_data[i]) == InferenceServerException:
+                print(user_data[i])
                 sys.exit(1)
 
             # Validate the values by matching with already computed expected
@@ -153,8 +154,8 @@ if __name__ == '__main__':
             print(time.time() - start1, "s")
             # plot_result(result,og_im=og_ims[0])
             plot_result_dynamic(result, og_im=og_ims[i])
-            plt.show()
-            plt.pause(5)
+            # plt.show()
+            # plt.pause(5)
         # print('hihkjhkjjlkjlkjl')
         # fig, axes = plt.subplots(1, 2)  # figsize设定窗口大小
         #     axes[0].imshow(result_img)
