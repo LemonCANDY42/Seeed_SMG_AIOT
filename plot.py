@@ -11,7 +11,33 @@ import sys
 import tritonclient.grpc as grpcclient
 from tritonclient.utils import InferenceServerException
 from OPIXray_grpc_image_client import *
-from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
+#from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
+
+COLOR_CONFIG = {
+    'Folding_Knife': (255, 255, 0)
+    , 'Straight_Knife': (0, 255, 0)
+    , 'Scissor': (0, 0, 255)
+    , 'Utility_Knife': (255, 0, 255)
+    , 'Multi-tool_Knife': (255, 0, 0),
+}
+
+def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_dict: dict, og_im,
+                                 color_config=COLOR_CONFIG):
+    og_im_copy = og_im.copy()
+    for cls, scores in class_correct_scores.items():
+        if scores:
+            for index, score in enumerate(scores):
+                coordinate = tuple(map(int, class_coordinate_dict[cls][index]))
+                first_point = (coordinate[0], coordinate[1])
+                last_point = (coordinate[2], coordinate[3])
+                cv2.rectangle(og_im, first_point, last_point, color_config[cls], 2)
+                # 在矩形框上方绘制该框的名称
+                text_point = ((coordinate[0], coordinate[1] - 4 if coordinate[1] - 4 > 0 else coordinate[1]))
+                cv2.putText(og_im, "{0},score:{1}".format(cls, "%.2f" % score), text_point,
+                            cv2.FONT_HERSHEY_COMPLEX,
+                            fontScale=1, color=color_config[cls],
+                            thickness=2)
+    return og_im_copy, og_im
 
 
 def plot_result_dynamic(detections, og_im, h=954, w=1225, classes=OPIXray_CLASSES):
@@ -88,7 +114,7 @@ if __name__ == '__main__':
     # input0_data = np.expand_dims(input0_data, axis=0)
 
     image_data, og_ims = file_paser(FLAGS)
-    for i in range(0, len(image_data)-1):
+    for i in range(0, len(image_data) - 1):
 
         # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
         inputi_data = image_data[i]
@@ -180,4 +206,3 @@ if __name__ == '__main__':
         #         print("sync infer error: incorrect difference")
         #         sys.exit(1)
         print("PASS: Async infer")
-
