@@ -114,7 +114,7 @@ if __name__ == '__main__':
     # input0_data = np.expand_dims(input0_data, axis=0)
 
     image_data, og_ims = file_paser(FLAGS)
-    for i in range(0, len(image_data) - 1):
+    for i in range(0, len(image_data)):
 
         # input0_data = np.ones(shape=(1,3,300,300), dtype=np.float32)
         inputi_data = image_data[i]
@@ -156,7 +156,7 @@ if __name__ == '__main__':
             time.sleep(.1)
 
         # Display and validate the available results
-        print((len(user_data)))
+        print('user_data length:',(len(user_data)))
         if ((len(user_data) == 1)):
             # Check for the errors
             if type(user_data[i]) == InferenceServerException:
