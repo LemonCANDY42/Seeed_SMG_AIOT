@@ -13,14 +13,41 @@ from tritonclient.utils import InferenceServerException
 from OPIXray_grpc_image_client import *
 #from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
-COLOR_CONFIG = {
-    'Folding_Knife': (72,61,139)
-    , 'Straight_Knife': (72,61,139)
-    , 'Scissor': (72,61,139)
-    , 'Utility_Knife': (72,61,139)
-    , 'Multi-tool_Knife': (72,61,139),
-}
+# different color
+# COLOR_CONFIG = {
+#     'Folding_Knife': (0, 0, 0)
+#     , 'Straight_Knife': (0,100,0)
+#     , 'Scissor': (0,0,128)
+#     , 'Utility_Knife': (255, 0, 255)
+#     , 'Multi-tool_Knife': (255, 0, 0),
+# }
 
+# Purple
+# COLOR_CONFIG = {
+#     'Folding_Knife': (72,61,139)
+#     , 'Straight_Knife': (72,61,139)
+#     , 'Scissor': (72,61,139)
+#     , 'Utility_Knife': (72,61,139)
+#     , 'Multi-tool_Knife': (72,61,139),
+# }
+
+# pink
+# COLOR_CONFIG = {
+#     'Folding_Knife': (255,0,255)
+#     , 'Straight_Knife': (255,0,255)
+#     , 'Scissor': (255,0,255)
+#     , 'Utility_Knife': (255,0,255)
+#     , 'Multi-tool_Knife': (255,0,255),
+# }
+
+# Red
+COLOR_CONFIG = {
+    'Folding_Knife': (255,0,0)
+    , 'Straight_Knife': (255,0,0)
+    , 'Scissor': (255,0,0)
+    , 'Utility_Knife': (255,0,0)
+    , 'Multi-tool_Knife': (255,0,0),
+}
 
 def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_dict: dict, og_im,
                                  color_config=COLOR_CONFIG):
