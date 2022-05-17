@@ -32,22 +32,22 @@ from OPIXray_grpc_image_client import *
 # }
 
 # pink
-# COLOR_CONFIG = {
-#     'Folding_Knife': (255,0,255)
-#     , 'Straight_Knife': (255,0,255)
-#     , 'Scissor': (255,0,255)
-#     , 'Utility_Knife': (255,0,255)
-#     , 'Multi-tool_Knife': (255,0,255),
-# }
+COLOR_CONFIG = {
+    'Folding_Knife': (255,0,255)
+    , 'Straight_Knife': (255,0,255)
+    , 'Scissor': (255,0,255)
+    , 'Utility_Knife': (255,0,255)
+    , 'Multi-tool_Knife': (255,0,255),
+}
 
 # Red
-COLOR_CONFIG = {
-    'Folding_Knife': (255,0,0)
-    , 'Straight_Knife': (255,0,0)
-    , 'Scissor': (255,0,0)
-    , 'Utility_Knife': (255,0,0)
-    , 'Multi-tool_Knife': (255,0,0),
-}
+# COLOR_CONFIG = {
+#     'Folding_Knife': (255,0,0)
+#     , 'Straight_Knife': (255,0,0)
+#     , 'Scissor': (255,0,0)
+#     , 'Utility_Knife': (255,0,0)
+#     , 'Multi-tool_Knife': (255,0,0),
+# }
 
 def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_dict: dict, og_im,
                                  color_config=COLOR_CONFIG):
