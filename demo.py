@@ -14,11 +14,11 @@ from OPIXray_grpc_image_client import *
 #from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
 COLOR_CONFIG = {
-    'Folding_Knife': (0, 0, 0)
-    , 'Straight_Knife': (0,100,0)
-    , 'Scissor': (0,0,128)
-    , 'Utility_Knife': (255, 0, 255)
-    , 'Multi-tool_Knife': (255, 0, 0),
+    'Folding_Knife': (72,61,139)
+    , 'Straight_Knife': (72,61,139)
+    , 'Scissor': (72,61,139)
+    , 'Utility_Knife': (72,61,139)
+    , 'Multi-tool_Knife': (72,61,139),
 }
 
 
