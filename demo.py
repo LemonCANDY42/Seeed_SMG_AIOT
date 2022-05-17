@@ -14,12 +14,13 @@ from OPIXray_grpc_image_client import *
 #from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
 COLOR_CONFIG = {
-    'Folding_Knife': (255, 255, 0)
-    , 'Straight_Knife': (0, 255, 0)
-    , 'Scissor': (0, 0, 255)
+    'Folding_Knife': (0, 0, 0)
+    , 'Straight_Knife': (0,100,0)
+    , 'Scissor': (0,0,128)
     , 'Utility_Knife': (255, 0, 255)
     , 'Multi-tool_Knife': (255, 0, 0),
 }
+
 
 def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_dict: dict, og_im,
                                  color_config=COLOR_CONFIG):
@@ -35,13 +36,13 @@ def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_di
                 text_point = ((coordinate[0], coordinate[1] - 4 if coordinate[1] - 4 > 0 else coordinate[1]))
                 cv2.putText(og_im, "{0},score:{1}".format(cls, "%.2f" % score), text_point,
                             cv2.FONT_HERSHEY_COMPLEX,
-                            fontScale=1, color=color_config[cls],
-                            thickness=2)
+                            fontScale=1.5, color=color_config[cls],
+                            thickness=3)
     return og_im_copy, og_im
 
 
 def plot_result_dynamic(detections, og_ims, h=954, w=1225, classes=OPIXray_CLASSES):
-    fig, axes = plt.subplots(1, 2)
+    fig, axes = plt.subplots(1, 2, figsize=(12,12), dpi=200)
     plt.ion()
     for i in range(len(detections)):
         all_boxes = [[[] for _ in range(1)]
@@ -54,16 +55,16 @@ def plot_result_dynamic(detections, og_ims, h=954, w=1225, classes=OPIXray_CLASS
 
         if i == 0:
             am0 = axes[0].imshow(image1)
-            axes[0].set_title("Xray Image")
+            axes[0].set_title("Xray Image (1)",fontsize=20)
             axes[0].axis('off')
             am1 = axes[1].imshow(image2)
-            axes[1].set_title("Result")
+            axes[1].set_title("Result (1)",fontsize=20)
             axes[1].axis('off')
         else:
             am0.set_data(image1)
             am1.set_data(image2)
-            axes[0].set_title(f"Xray Image ({i})")
-            axes[1].set_title(f"Result ({i})")
+            axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
+            axes[1].set_title(f"Result ({i+1})",fontsize=20)
             fig.canvas.flush_events()
         plt.pause(3)
     # plt.ioff()
