@@ -160,7 +160,7 @@ if __name__ == '__main__':
         outputs = []
 
         inputs.append(grpcclient.InferInput('modelInput', [1, 3, 300, 300], "FP32"))
-        inputs[0].set_data_from_numpy(image_data[0])
+        inputs[0].set_data_from_numpy(image_data[i])
 
         outputs.append(grpcclient.InferRequestedOutput('modelOutput'))
         outputs.append(grpcclient.InferRequestedOutput('407'))
