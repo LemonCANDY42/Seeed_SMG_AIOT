@@ -4,7 +4,7 @@ import glob
 import logging
 import traceback
 import matplotlib
-matplotlib.use('TkAgg')
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import ImageFile
 import numpy as np
