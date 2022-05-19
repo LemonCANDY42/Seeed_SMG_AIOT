@@ -3,6 +3,8 @@ import cv2
 import glob
 import logging
 import traceback
+import matplotlib
+matploblib.use('TkAgg')
 import matplotlib.pyplot as plt
 from PIL import ImageFile
 import numpy as np
@@ -93,7 +95,7 @@ def plot_result_dynamic(detections, og_ims, h=954, w=1225, classes=OPIXray_CLASS
             axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
             axes[1].set_title(f"Result ({i+1})",fontsize=20)
             fig.canvas.flush_events()
-        # plt.pause(1)
+        plt.pause(1)
     plt.ioff()
 
 
