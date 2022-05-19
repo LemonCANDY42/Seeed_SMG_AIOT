@@ -57,7 +57,7 @@ def plot_result_dynamic(detections, og_ims,fig, axes,i, h=954, w=1225, classes=O
     class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes,
                                                                 OPIXray_CLASSES=OPIXray_CLASSES)
 
-    image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_ims)
+    image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_ims[i])
     am0 = None
     am1 = None
 
