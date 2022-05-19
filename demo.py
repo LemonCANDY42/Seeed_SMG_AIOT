@@ -13,24 +13,6 @@ from tritonclient.utils import InferenceServerException
 from OPIXray_grpc_image_client import *
 #from OPIXray.DOAM.detection_draw import draw_with_coordinate_dynamic
 
-# different color
-# COLOR_CONFIG = {
-#     'Folding_Knife': (0, 0, 0)
-#     , 'Straight_Knife': (0,100,0)
-#     , 'Scissor': (0,0,128)
-#     , 'Utility_Knife': (255, 0, 255)
-#     , 'Multi-tool_Knife': (255, 0, 0),
-# }
-
-# Purple
-# COLOR_CONFIG = {
-#     'Folding_Knife': (72,61,139)
-#     , 'Straight_Knife': (72,61,139)
-#     , 'Scissor': (72,61,139)
-#     , 'Utility_Knife': (72,61,139)
-#     , 'Multi-tool_Knife': (72,61,139),
-# }
-
 # pink
 COLOR_CONFIG = {
     'Folding_Knife': (255,0,255)
@@ -40,14 +22,13 @@ COLOR_CONFIG = {
     , 'Multi-tool_Knife': (255,0,255),
 }
 
-# Red
-# COLOR_CONFIG = {
-#     'Folding_Knife': (255,0,0)
-#     , 'Straight_Knife': (255,0,0)
-#     , 'Scissor': (255,0,0)
-#     , 'Utility_Knife': (255,0,0)
-#     , 'Multi-tool_Knife': (255,0,0),
-# }
+from threading import Thread
+
+def create_thread(f):
+  def wrapper(*args, **kwargs):
+    thr = Thread(target=f, args=args, kwargs=kwargs, daemon=True)
+    thr.start()
+  return wrapper
 
 def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_dict: dict, og_im,
                                  color_config=COLOR_CONFIG):
@@ -67,34 +48,34 @@ def draw_with_coordinate_dynamic(class_correct_scores: dict, class_coordinate_di
                             thickness=3)
     return og_im_copy, og_im
 
+@create_thread
+def plot_result_dynamic(detections, og_ims,fig, axes,i, h=954, w=1225, classes=OPIXray_CLASSES):
 
-def plot_result_dynamic(detections, og_ims, h=954, w=1225, classes=OPIXray_CLASSES):
-    fig, axes = plt.subplots(1, 2, figsize=(12,12), dpi=200)
-    plt.ion()
-    for i in range(len(detections)):
-        all_boxes = [[[] for _ in range(1)]
-                     for _ in range(len(classes) + 1)]
-        class_correct_scores, class_coordinate_dict = result_struct(detections[i], h, w, all_boxes=all_boxes,
-                                                                    OPIXray_CLASSES=OPIXray_CLASSES)
-        # print(class_coordinate_dict)
-        # draw_with_coordinate(class_correct_scores, class_coordinate_dict,og_im)
-        image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_ims[i])
+    # for i in range(len(detections)):
+    all_boxes = [[[] for _ in range(1)]
+                 for _ in range(len(classes) + 1)]
+    class_correct_scores, class_coordinate_dict = result_struct(detections, h, w, all_boxes=all_boxes,
+                                                                OPIXray_CLASSES=OPIXray_CLASSES)
 
-        if i == 0:
-            am0 = axes[0].imshow(image1)
-            axes[0].set_title("Xray Image (1)",fontsize=20)
-            axes[0].axis('off')
-            am1 = axes[1].imshow(image2)
-            axes[1].set_title("Result (1)",fontsize=20)
-            axes[1].axis('off')
-        else:
-            am0.set_data(image1)
-            am1.set_data(image2)
-            axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
-            axes[1].set_title(f"Result ({i+1})",fontsize=20)
-            fig.canvas.flush_events()
-        plt.pause(1)
-    plt.ioff()
+    image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_ims)
+    am0 = None
+    am1 = None
+
+    if i == 0:
+        am0 = axes[0].imshow(image1)
+        axes[0].set_title("Xray Image (1)",fontsize=20)
+        axes[0].axis('off')
+        am1 = axes[1].imshow(image2)
+        axes[1].set_title("Result (1)",fontsize=20)
+        axes[1].axis('off')
+    else:
+        am0.set_data(image1)
+        am1.set_data(image2)
+        axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
+        axes[1].set_title(f"Result ({i+1})",fontsize=20)
+        fig.canvas.flush_events()
+    plt.pause(1)
+
 
 
 if __name__ == '__main__':
@@ -186,7 +167,6 @@ if __name__ == '__main__':
                                   callback=partial(callback, user_data),
                                   outputs=outputs,
                                   client_timeout=FLAGS.client_timeout)
-        start1 = time.time()
         # Wait until the results are available in user_data
         time_out = 10
         while ((len(user_data) == 0) and time_out > 0):
@@ -194,9 +174,12 @@ if __name__ == '__main__':
             time.sleep(.1)
         if ((len(user_data) == 1)):
             results.append(user_data[0])
+    start1 = time.time()
 
     print('results length:', (len(results)))
-    output_result = []
+    # output_result = []
+    fig, axes = plt.subplots(1, 2, figsize=(12,12), dpi=200)
+    plt.ion()
     for i in range(0,len(results)):
         # Display and validate the available results
         # Check for the errors
@@ -211,9 +194,12 @@ if __name__ == '__main__':
         # exit(0)
         detect = Detect(6, 0, 200, 0.01, 0.45)
         result = detect.forward(output0_data, output1_data, output2_data).data
-        output_result.append(result)
+        # output_result.append(result)
+
+        plot_result_dynamic(result,og_ims,fig, axes,i)
+    plt.ioff()
 
     print(time.time() - start1, "s")
-    plot_result_dynamic(output_result, og_ims=og_ims)
+
 
     print("PASS: Async infer")
