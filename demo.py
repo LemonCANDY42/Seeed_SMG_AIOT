@@ -193,6 +193,7 @@ if __name__ == '__main__':
         thr.start()
         image1,image2=plot_result_dynamic(result,og_ims,fig, axes,i)
 
+        am0=None;am1=None
         if i == 0:
           am0 = axes[0].imshow(image1)
           axes[0].set_title("Xray Image (1)", fontsize=20)
