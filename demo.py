@@ -93,12 +93,12 @@ def plot_result_dynamic(detections, og_ims, h=954, w=1225, classes=OPIXray_CLASS
             axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
             axes[1].set_title(f"Result ({i+1})",fontsize=20)
             fig.canvas.flush_events()
-        plt.pause(3)
-    # plt.ioff()
+        plt.pause(1)
+    plt.ioff()
 
 
 if __name__ == '__main__':
-    # python OPIXray_grpc_image_client.py  -u 192.168.8.187:8001 -m opi
+    # python demo.py  -u 192.168.8.187:230 -m opi
     parser = argparse.ArgumentParser()
     parser.add_argument('-v',
                         '--verbose',
