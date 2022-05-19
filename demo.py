@@ -171,9 +171,25 @@ if __name__ == '__main__':
     start1 = time.time()
 
     print('results length:', (len(results)))
-    # output_result = []
+
     fig, axes = plt.subplots(1, 2, figsize=(12,12), dpi=200)
     plt.ion()
+
+    def run(result, og_ims, fig, axes, i):
+      image1, image2 = plot_result_dynamic(result, og_ims, fig, axes, i)
+
+      am0 = None;
+      am1 = None
+      if i == 0:
+        am0 = axes[0].imshow(image1)
+        axes[0].set_title("Xray Image (1)", fontsize=20)
+        axes[0].axis('off')
+        am1 = axes[1].imshow(image2)
+        axes[1].set_title("Result (1)", fontsize=20)
+        axes[1].axis('off')
+      else:
+        plot_refersh(image1, image2, am0, am1, fig, axes, i)
+
     for i in range(0,len(results)):
         # Display and validate the available results
         # Check for the errors
@@ -189,20 +205,8 @@ if __name__ == '__main__':
         detect = Detect(6, 0, 200, 0.01, 0.45)
         result = detect.forward(output0_data, output1_data, output2_data).data
         # output_result.append(result)
-        thr = Thread(target=f, args=args, kwargs=kwargs, daemon=True)
+        thr = Thread(target=run, args=(result, og_ims, fig, axes, i), daemon=True)
         thr.start()
-        image1,image2=plot_result_dynamic(result,og_ims,fig, axes,i)
-
-        am0=None;am1=None
-        if i == 0:
-          am0 = axes[0].imshow(image1)
-          axes[0].set_title("Xray Image (1)", fontsize=20)
-          axes[0].axis('off')
-          am1 = axes[1].imshow(image2)
-          axes[1].set_title("Result (1)", fontsize=20)
-          axes[1].axis('off')
-        else:
-          plot_refersh(image1, image2, am0, am1, fig, axes,i)
 
     plt.ioff()
 
