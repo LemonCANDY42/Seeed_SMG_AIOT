@@ -58,23 +58,17 @@ def plot_result_dynamic(detections, og_ims,fig, axes,i, h=954, w=1225, classes=O
                                                                 OPIXray_CLASSES=OPIXray_CLASSES)
 
     image1, image2 = draw_with_coordinate_dynamic(class_correct_scores, class_coordinate_dict, og_ims[i])
-    am0 = None
-    am1 = None
+    return image1, image2
 
-    if i == 0:
-        am0 = axes[0].imshow(image1)
-        axes[0].set_title("Xray Image (1)",fontsize=20)
-        axes[0].axis('off')
-        am1 = axes[1].imshow(image2)
-        axes[1].set_title("Result (1)",fontsize=20)
-        axes[1].axis('off')
-    else:
-        am0.set_data(image1)
-        am1.set_data(image2)
-        axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
-        axes[1].set_title(f"Result ({i+1})",fontsize=20)
-        fig.canvas.flush_events()
-    plt.pause(1)
+@create_thread
+def plot_refersh(image1,image2,am0,am1,fig,axes,i):
+
+    am0.set_data(image1)
+    am1.set_data(image2)
+    axes[0].set_title(f"Xray Image ({i+1})",fontsize=20)
+    axes[1].set_title(f"Result ({i+1})",fontsize=20)
+    fig.canvas.flush_events()
+    plt.pause(2)
 
 
 
@@ -195,8 +189,20 @@ if __name__ == '__main__':
         detect = Detect(6, 0, 200, 0.01, 0.45)
         result = detect.forward(output0_data, output1_data, output2_data).data
         # output_result.append(result)
+        thr = Thread(target=f, args=args, kwargs=kwargs, daemon=True)
+        thr.start()
+        image1,image2=plot_result_dynamic(result,og_ims,fig, axes,i)
 
-        plot_result_dynamic(result,og_ims,fig, axes,i)
+        if i == 0:
+          am0 = axes[0].imshow(image1)
+          axes[0].set_title("Xray Image (1)", fontsize=20)
+          axes[0].axis('off')
+          am1 = axes[1].imshow(image2)
+          axes[1].set_title("Result (1)", fontsize=20)
+          axes[1].axis('off')
+        else:
+          plot_refersh(image1, image2, am0, am1, fig, axes,i)
+
     plt.ioff()
 
     print(time.time() - start1, "s")
